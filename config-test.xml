@@ -1,0 +1,39 @@
+<?xml version='1.0'?>
+<config>
+	<init>
+		<serveur>XXX.XXX.XXX.XXX</serveur>
+		<fichiers>
+			<download>10M</download>
+			<upload>up.zip</upload>
+			<output type="csv">data</output>
+		</fichiers>
+		<ports>
+			<d1>3389</d1>
+			<d2>4000</d2>
+			<d3>8080</d3>
+		</ports>
+		<inter>15</inter>
+		<total>555</total>
+		<loopDuration>1500</loopDuration>
+		<contension>100</contension>
+		<start_time>15:23</start_time>
+	</init>
+	<steps>
+		<test suffix="unitaire">
+			<step count="5"><start>dl_d1</start></step>
+			<step count="2"><stop>dl_d1</stop></step>
+			<step count="5"><start>dl_d2</start></step>
+			<step count="2"><stop>dl_d2</stop></step>
+			<step count="5"><start>dl_d3</start></step>
+			<step count="2"><stop>dl_d3</stop></step>
+		</test>
+		<test suffix="non_saturant">
+			<step><start>ns_d1</start></step>
+			<step count="5"><start>up_d2</start></step>
+			<step count="2"><stop>up_d2</stop></step>
+			<step count="5"><start>up_d3</start></step>
+			<step count="2"><stop>up_d3</stop></step>
+			<step><stop>ns_d1</stop></step>
+		</test>
+	</steps>
+</config>

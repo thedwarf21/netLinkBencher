@@ -1,0 +1,456 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>Solution SVG + Angular</title>
+  <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.1/angular-material.min.css">
+  <style type="text/css">
+    body {
+      background-color: #CCC;
+      margin: 8;
+      overflow-x: hidden;
+    }
+
+    #ctrl {
+      background-color: #DDD;
+      cursor: grab;
+    }
+
+    .formData label {
+      font-weight: bold;
+    }
+
+    .formData button {
+      background-color: white;
+      border: 2px #5C1 solid;
+      color: #5C1;
+    }
+
+    .formData button:hover {
+      border: 2px steelblue solid;
+      color: steelblue;
+    }
+
+    #infos {
+      text-align: right;
+    }
+
+    svg {
+      min-width: 50px;
+      background-color: white;
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    .etalon {
+      position: absolute;
+      width: 0;
+      top: 8;
+      border: 1px dashed darkblue;
+    }
+
+    .valuebox {
+      position: absolute;
+      border: 1px solid black;
+      background-color: #DEA;
+      font-size: 10pt;
+    }
+
+    table {
+      border: 1px solid;
+      box-shadow: 2 2 2;
+      width: 100%;
+      background-color: white;
+    }
+
+    table th {
+      background-color: steelblue;
+      color: white;
+      font-weight: bold;
+      width: 25%;
+    }
+
+    table td {
+      border: 1px silver solid;
+      text-align: right;
+    }
+
+    table td.titre {
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div  ng-app="myApp">
+    <div id="ctrl" ng-controller="svgCtrl" ng-init="init()" ng-mousedown="mouseDown($event)" ng-mouseup="mouseUp()" ng-mousemove="mouseMove($event)" ng-mouse-wheel="mouseWheel">
+
+      <div layout="row">
+        <div flex="50" class="formData">
+          <div layout="row" layout-align="space-around center">
+            <label flex="30" for="dataFile">Fichier de données: </label>
+            <span flex="5"></span>
+            <input flex type="file" id="dataFile" accept=".csv" onchange="angular.element(this).scope().loadData()" />
+          </div>
+        </div>
+        <div flex="10" class="marge"></div>
+        <div flex id="infos"></div>
+      </div>
+
+      <div id="{{graphname}}" ng-repeat="(graphname, myGraph) in vals" style="transform: translateX({{panDelta}}px)">
+        <svg myId="{{graphname}}" ng:attr:width="{{baseWidth}}" ng:attr:height="{{baseHeight}}">
+          <g>
+            <line ng:attr:x1="{{10 * ratioX}}" ng:attr:y1="{{baseHeight - 10}}" 
+                  ng:attr:x2="{{10 * ratioX}}" y2="0" 
+                  stroke="black" stroke-width="2" />
+            <line ng:attr:x1="{{10 * ratioX}}" y1="0" 
+                  ng:attr:x2="{{10 * ratioX - 5}}" y2="10" 
+                  stroke="black" stroke-width="2" />
+            <line ng:attr:x1="{{10 * ratioX}}" y1="0" 
+                  ng:attr:x2="{{10 * ratioX + 5}}" y2="10" 
+                  stroke="black" stroke-width="2" />
+            <line ng:attr:x1="{{10 * ratioX}}" ng:attr:y1="{{baseHeight - 10}}" 
+                  ng:attr:x2="{{baseWidth}}" ng:attr:y2="{{baseHeight - 10}}" 
+                  stroke="black" stroke-width="2" />
+            <line ng:attr:x1="{{baseWidth}}" ng:attr:y1="{{baseHeight - 10}}" 
+                  ng:attr:x2="{{baseWidth - 10}}" ng:attr:y2="{{baseHeight - 5}}" 
+                  stroke="black" stroke-width="2" />
+            <line ng:attr:x1="{{baseWidth}}" ng:attr:y1="{{baseHeight - 10}}" 
+                  ng:attr:x2="{{baseWidth - 10}}" ng:attr:y2="{{baseHeight - 15}}" 
+                  stroke="black" stroke-width="2" />
+          </g>
+          <g ng-repeat="(key, courbe) in myGraph">
+            <g id="{{graphname}}_{{key}}" ng-repeat="val in courbe" ng-if="!$first">
+              <line ng:attr:x1="{{courbe[$index - 1].x}}" 
+                    ng:attr:y1="{{(max[graphname] - courbe[$index - 1].y) * ratioY[graphname]}}" 
+                    ng:attr:x2="{{val.x}}" 
+                    ng:attr:y2="{{(max[graphname] - val.y) * ratioY[graphname]}}" 
+                    stroke="{{params[key].color}}" stroke-width="1" />
+            </g>
+          </g>
+        </embed>
+
+        <h2>Graphique classe {{graphname}}</h2>
+
+      </div>
+    </div>
+  </div>
+  <br/><br/>
+</body>
+</html>
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular.min.js"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular-sanitize.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-route.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-animate.min.js"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular-aria.min.js"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-messages.min.js"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.1/angular-material.min.js"></script>
+<script type="text/javascript">
+  
+/***********
+ * ANGULAR *
+ ***********/
+  var myApp = angular.module('myApp', ['ngSanitize','ngMaterial']);
+
+  /*** Directive appelée lors d'une action sur la molette de la souris. ***/
+  myApp.directive('ngMouseWheel', function() {
+    return function(scope, element, attrs) {
+      element.bind("DOMMouseScroll mousewheel onmousewheel", function(event) {  
+        // cross-browser wheel delta
+        var event = window.event || event; // old IE support
+        if (event.target) event = event.target; // It sometimes happens that events get encapsed
+        var delta = Math.max(-1, Math.min(1, (event.wheelDelta || -event.detail)));
+
+        // Execute target function
+        scope.$apply(function(){
+          scope.$eval(attrs.ngMouseWheel + "(" + delta + ")");
+        });
+    
+        // for IE
+        event.returnValue = false;
+        // for Chrome and Firefox
+        if(event.preventDefault)  {
+          event.preventDefault();
+        }
+      });
+    };
+  });
+
+  /*** Controller svgCtrl : gestion des courbes (affichage, zoom, panotage). ***/
+  myApp.controller('svgCtrl', ['$scope','$http','$sce', '$timeout', function ($scope,$http,$sce,$timeout) {
+    $scope.init = function() {
+      $scope.baseHeight = 250;
+      $scope.params = Object();
+      $scope.params['p'] = {lib: "Ping TCP", color: "steelblue", unite: "ms"};
+      $scope.params['d'] = {lib: "Download", color: "green", unite: "ko/s"};
+      $scope.params['u'] = {lib: "Upload", color: "orange", unite: "ko/s"};
+      $scope.vals = Object();
+      $scope.vals.D1 = Object();
+      $scope.vals.D1['p'] = Array();
+      $scope.vals.D1['d'] = Array();
+      $scope.vals.D1['u'] = Array();
+      $scope.vals.D2 = Object();
+      $scope.vals.D2['p'] = Array();
+      $scope.vals.D2['d'] = Array();
+      $scope.vals.D2['u'] = Array();
+      $scope.vals.D3 = Object();
+      $scope.vals.D3['p'] = Array();
+      $scope.vals.D3['d'] = Array();
+      $scope.vals.D3['u'] = Array();
+      $scope.max = Object();
+      $scope.max['D1'] = 0;
+      $scope.max['D2'] = 0;
+      $scope.max['D3'] = 0;
+      $scope.max['D1_p'] = 0;
+      $scope.max['D2_p'] = 0;
+      $scope.max['D3_p'] = 0;
+      $scope.max['D1_d'] = 0;
+      $scope.max['D2_d'] = 0;
+      $scope.max['D3_d'] = 0;
+      $scope.max['D1_u'] = 0;
+      $scope.max['D2_u'] = 0;
+      $scope.max['D3_u'] = 0;
+      $scope.ratioX = 1;
+      $scope.panInProgress = false;
+      $scope.panDelta = 0;
+    }
+
+    /** Fonction appelée par la directive ngChange de l'input de type file. **/
+    $scope.loadData = function() {
+      $("#infos").html("Veuillez patienter... Tracé des graphiques en cours.<br/>Cette opération peut prendre quelques secondes.");
+
+      var f = document.getElementById("dataFile");
+      var file = f.files[0],
+      fr = new FileReader();
+
+      // Gestion des erreurs.
+      fr.onerror = function() { alert("Erreur lors du chargement du fichier !"); };
+
+      fr.onload = function() {
+        // Lecture du fichier de données (traitement).
+        $scope.init();
+        lignes = fr.result.split("\n");
+        for(lineNum = 0; lineNum < lignes.length; lineNum++) {
+          if (lineNum > 0) {
+            values = lignes[lineNum].split("\t");
+            for(i = 0; i < values.length; i++) {
+              values[i] = parseFloat(values[i]);
+            }
+
+            // Max graphes pour calcul échelles.
+            if (values[1] > $scope.max['D1']) $scope.max['D1'] = values[1];
+            if (values[2] > $scope.max['D2']) $scope.max['D2'] = values[2];
+            if (values[3] > $scope.max['D3']) $scope.max['D3'] = values[3];
+            if (values[4] > $scope.max['D1']) $scope.max['D1'] = values[4];
+            if (values[5] > $scope.max['D2']) $scope.max['D2'] = values[5];
+            if (values[6] > $scope.max['D3']) $scope.max['D3'] = values[6];
+            if (values[7] > $scope.max['D1']) $scope.max['D1'] = values[7];
+            if (values[8] > $scope.max['D2']) $scope.max['D2'] = values[8];
+            if (values[9] > $scope.max['D3']) $scope.max['D3'] = values[9];
+
+            // Max courbes pour affichage.
+            if (values[1] > $scope.max['D1_p']) $scope.max['D1_p'] = values[1];
+            if (values[2] > $scope.max['D2_p']) $scope.max['D2_p'] = values[2];
+            if (values[3] > $scope.max['D3_p']) $scope.max['D3_p'] = values[3];
+            if (values[4] > $scope.max['D1_d']) $scope.max['D1_d'] = values[4];
+            if (values[5] > $scope.max['D2_d']) $scope.max['D2_d'] = values[5];
+            if (values[6] > $scope.max['D3_d']) $scope.max['D3_d'] = values[6];
+            if (values[7] > $scope.max['D1_u']) $scope.max['D1_u'] = values[7];
+            if (values[8] > $scope.max['D2_u']) $scope.max['D2_u'] = values[8];
+            if (values[9] > $scope.max['D3_u']) $scope.max['D3_u'] = values[9];
+
+            // Enregistrement des valeurs dans l'objet.
+            $scope.vals.D1['p'].push({x: lineNum * 10, y: values[1]});
+            $scope.vals.D2['p'].push({x: lineNum * 10, y: values[2]});
+            $scope.vals.D3['p'].push({x: lineNum * 10, y: values[3]});
+            $scope.vals.D1['d'].push({x: lineNum * 10, y: values[4]});
+            $scope.vals.D2['d'].push({x: lineNum * 10, y: values[5]});
+            $scope.vals.D3['d'].push({x: lineNum * 10, y: values[6]});
+            $scope.vals.D1['u'].push({x: lineNum * 10, y: values[7]});
+            $scope.vals.D2['u'].push({x: lineNum * 10, y: values[8]});
+            $scope.vals.D3['u'].push({x: lineNum * 10, y: values[9]});
+          } else $scope.baseWidth = (lignes.length - 1) * 10;
+        }
+        $scope.ratioY = Array();
+        Object.keys($scope.vals).forEach(function(graph) {
+          $scope.ratioY[graph] = ($scope.baseHeight - 10) / $scope.max[graph];
+        });
+
+        // Affichage des valeurs maximales des courbes.
+        $scope.displayMaxValues();
+      };
+
+      // Lecture du fichier de données (appel).
+      fr.readAsText(file);
+    }
+
+    $scope.displayMaxValues = function() {
+      $("#infos").html($("<table></table>")
+        .append($("<tr></tr>")
+          .append($("<td></td>").addClass("titre").html("<b>Maximales</b>"))
+          .append($("<th></th>").html("D1"))
+          .append($("<th></th>").html("D2"))
+          .append($("<th></th>").html("D3"))
+        )
+        .append($("<tr></tr>")
+          .append($("<th></th>").html($scope.params['p'].lib))
+          .append($("<td></td>").html( $scope.max['D1_p'] ))
+          .append($("<td></td>").html( $scope.max['D2_p'] ))
+          .append($("<td></td>").html( $scope.max['D3_p'] ))
+        )
+        .append($("<tr></tr>")
+          .append($("<th></th>").html($scope.params['d'].lib))
+          .append($("<td></td>").html( $scope.max['D1_d'] ))
+          .append($("<td></td>").html( $scope.max['D2_d'] ))
+          .append($("<td></td>").html( $scope.max['D3_d'] ))
+        )
+        .append($("<tr></tr>")
+          .append($("<th></th>").html($scope.params['u'].lib))
+          .append($("<td></td>").html( $scope.max['D1_u'] ))
+          .append($("<td></td>").html( $scope.max['D2_u'] ))
+          .append($("<td></td>").html( $scope.max['D3_u'] ))
+        )
+      );
+    }
+    
+    /** Fonction appelée par la directive ngMouseWheel du controller. **/
+    $scope.mouseWheel = function(delta) {
+      // Si la valeur passée en paramètre est indéfinie, ou nulle on sort.
+      if (!delta) return;
+
+      // Stockage de l'ancien ratio et caclcul du nouveau (avec bornes).
+      var old_ratio = $scope.ratioX;
+      $scope.ratioX += delta * 0.2;
+      if ($scope.ratioX < 0.1) $scope.ratioX = 0.1;
+      if ($scope.ratioX > 10) $scope.ratioX = 10;
+
+      // Calcul et application du coefficient de conversion entre l'ancien et le nouveau ratio.
+      var coefficient = $scope.ratioX / old_ratio;
+      $scope.baseWidth *= coefficient;
+      $.each($scope.vals, function(key, value) {
+        $.each(value, function(index, val) {
+          val.forEach(function(element) {
+            element.x *= coefficient;
+          });
+        });
+      });
+
+      // Application des limites de panotage (évite affichage hors écran).
+      $scope.applyPanLimits();
+    }
+
+    /** Fonction appelée par la directive ngMousedown au niveau du controller. **/
+    $scope.mouseDown = function(event) {
+      if (event.ctrlKey) {
+        // Si la touche CTRL est enfoncée, on souhaite afficher les valeurs.
+        $scope.showingVals = true;
+        mouseX = event.pageX;
+
+        // Gestion cross-navigator.
+        var event = window.event || event; // old IE support.
+        if (event.target) event = event.target; // It sometimes happens that events get encapsed.
+
+        id = $(event).attr("myId");
+        if (id) {
+          tableau = $scope.vals[id].p;
+          i = 1;
+          while (i < tableau.length && mouseX - 8 > tableau[i].x + $scope.panDelta) i++;
+
+          $("body").append($("<div></div>")
+            .attr("id", "lineValOne")
+            .addClass("etalon")
+            .css("height", $(document).height())
+            .css("left", tableau[i-1].x + $scope.panDelta)
+          );
+          $("body").append($("<div></div>")
+            .attr("id", "lineValTwo")
+            .addClass("etalon")
+            .css("height", $(document).height())
+            .css("left", tableau[i].x + $scope.panDelta)
+          );
+          values = $scope.vals[id];
+          html = "";
+          $.each($scope.params, function(key, param) {
+            value = values[key][i-1].y;
+            html += "<b style=\"color:" + param.color + "\">" + param.lib + "</b>: " + value + " " + param.unite + "<br/>";
+          });
+          posY = $("#" + id).outerHeight() * parseInt(id[1]);
+          $("body").append($("<div></div>")
+            .attr("id", "valsOne")
+            .addClass("valuebox")
+            .css("left", tableau[i-1].x + $scope.panDelta)
+            .css("top",  posY)
+            .html(html)
+          );
+          html = "";
+          $.each($scope.params, function(key, param) {
+            value = values[key][i].y;
+            html += "<b style=\"color:" + param.color + "\">" + param.lib + "</b>: " + value + " " + param.unite + "<br/>";
+          });
+          posY += $("#valsOne").outerHeight();
+          $("body").append($("<div></div>")
+            .attr("id", "valsTwo")
+            .addClass("valuebox")
+            .css("left", tableau[i].x + $scope.panDelta)
+            .css("top", posY)
+            .html(html)
+          );
+        }
+      } else {
+        // Sinon on est en mode panotage.
+        $scope.panInProgress = true;
+        $scope.downedX = event.clientX;
+        $("#ctrl").css("cursor", "grabbing");
+      }
+
+      // for IE
+      event.returnValue = false;
+      // for Chrome and Firefox
+      if(event.preventDefault)  {
+        event.preventDefault();
+      }
+    }
+
+    /** Fonction appelée par la directive ngMousemove au niveau du controller. **/
+    $scope.mouseMove = function(event) {
+      if ($scope.panInProgress) {
+        $scope.panDelta += event.pageX - $scope.downedX;
+        $scope.downedX = event.pageX;
+        $scope.applyPanLimits();
+      }
+    }
+
+    /** Fonction appelée par la directive ngMouseup au niveau du controller. **/
+    $scope.mouseUp = function() {
+      if ($scope.showingVals) {
+        $scope.showingVals = false;
+        $(".etalon").remove();
+        $(".valuebox").remove();
+      }
+      $scope.panInProgress = false;
+      $("#ctrl").css("cursor", "grab");
+    }
+
+    /** Fonction d'application des limites de panotage permettant de garder les courbes toujours visibles. **/
+    $scope.applyPanLimits = function() {
+      limite = $(window).width() - $scope.baseWidth - 10;
+      if (limite < 0) {
+        if ($scope.panDelta > 0) $scope.panDelta = 0;
+        if ($scope.panDelta < limite) $scope.panDelta = limite;
+      } else $scope.panDelta = 0;
+    }
+  }]);
+
+
+/*********************
+ * Un peu de jQuery. *
+ *********************/
+
+$(document).ready("body").mouseleave(function() {
+  $(".etalon").remove();
+  $(".valuebox").remove();
+});
+</script>
